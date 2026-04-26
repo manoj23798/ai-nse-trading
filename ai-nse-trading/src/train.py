@@ -80,9 +80,15 @@ def train_model(
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]
     )
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=3, verbose=True
-    )
+    # Torch versions differ on whether `verbose` is accepted here.
+    try:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=0.5, patience=3, verbose=True
+        )
+    except TypeError:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=0.5, patience=3
+        )
 
     train_loader = make_loader(X_train, y_train, batch_size=cfg["batch_size"], shuffle=False)
     val_loader   = make_loader(X_val,   y_val,   batch_size=cfg["batch_size"], shuffle=False)
