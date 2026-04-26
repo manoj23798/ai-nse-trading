@@ -57,8 +57,12 @@ def run_daily_loop(
     # ── 2. Feature engineering ────────────────────────────────────────────────
     feat_df = build_features(raw, intraday=intraday)
 
+    # Normalise date column to tz-naive for stable filtering/comparisons.
+    feat_df["date"] = pd.to_datetime(feat_df["date"], errors="coerce", utc=True).dt.tz_localize(None)
+    feat_df = feat_df.dropna(subset=["date"]).copy()
+
     # ── 3. Prepare latest N days for fine-tuning ──────────────────────────────
-    cutoff_date = pd.Timestamp.today() - pd.Timedelta(days=retrain_on_last_n_days)
+    cutoff_date = pd.Timestamp.utcnow().tz_localize(None) - pd.Timedelta(days=retrain_on_last_n_days)
     recent = feat_df[feat_df["date"] >= cutoff_date].copy()
 
     # Per-ticker loop
